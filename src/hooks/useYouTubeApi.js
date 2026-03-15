@@ -15,7 +15,6 @@ export function useYouTubeApi(apiKey, regionCode = 'KR', categoryId = '0') {
 
   const fetchVideos = useCallback(async () => {
     if (!apiKey) {
-      setError('API 키를 입력해주세요.');
       setVideos([]);
       return;
     }

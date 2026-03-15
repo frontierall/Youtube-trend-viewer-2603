@@ -1,7 +1,20 @@
 import { VideoCard } from './VideoCard';
 import { SkeletonCard } from './SkeletonCard';
 
-export function VideoGrid({ videos, loading, error }) {
+export function VideoGrid({ videos, loading, error, hasApiKey }) {
+  // API 키가 없을 때 안내 메시지
+  if (!hasApiKey) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <div className="text-gray-400 text-6xl mb-4">🔑</div>
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">API 키를 입력해주세요</h3>
+        <p className="text-gray-600 text-center max-w-md">
+          YouTube 인기 동영상을 보려면 위에 API 키를 입력하세요.
+        </p>
+      </div>
+    );
+  }
+
   // 로딩 중일 때 스켈레톤 표시
   if (loading) {
     return (

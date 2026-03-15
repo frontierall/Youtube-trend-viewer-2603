@@ -83,7 +83,7 @@ function App() {
         )}
 
         {/* 비디오 그리드 */}
-        <VideoGrid videos={videos} loading={loading} error={error} />
+        <VideoGrid videos={videos} loading={loading} error={error} hasApiKey={!!apiKey} />
       </main>
 
       {/* 푸터 */}
