@@ -36,6 +36,55 @@ export function formatViewCount(count) {
  * @param {string} dateString - ISO 8601 형식의 날짜 문자열
  * @returns {string} 상대적 시간 문자열
  */
+/**
+ * 숫자를 간략한 형식으로 포맷팅 (좋아요, 댓글 수용)
+ * @param {number|string} count - 숫자
+ * @returns {string} 포맷팅된 문자열
+ */
+export function formatCount(count) {
+  const num = typeof count === 'string' ? parseInt(count, 10) : count;
+
+  if (isNaN(num) || num === 0) {
+    return '0';
+  }
+
+  if (num >= 100000000) {
+    return `${(num / 100000000).toFixed(1).replace(/\.0$/, '')}억`;
+  }
+
+  if (num >= 10000) {
+    return `${(num / 10000).toFixed(1).replace(/\.0$/, '')}만`;
+  }
+
+  if (num >= 1000) {
+    return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}천`;
+  }
+
+  return `${num}`;
+}
+
+/**
+ * ISO 8601 duration을 읽기 쉬운 형식으로 변환
+ * @param {string} duration - ISO 8601 형식 (예: PT5M30S, PT1H2M3S)
+ * @returns {string} 포맷팅된 시간 (예: 5:30, 1:02:03)
+ */
+export function formatDuration(duration) {
+  if (!duration) return '0:00';
+
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return '0:00';
+
+  const hours = parseInt(match[1] || 0, 10);
+  const minutes = parseInt(match[2] || 0, 10);
+  const seconds = parseInt(match[3] || 0, 10);
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
 export function formatRelativeTime(dateString) {
   const date = new Date(dateString);
   const now = new Date();

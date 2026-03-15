@@ -24,7 +24,7 @@ export function useYouTubeApi(apiKey, regionCode = 'KR', categoryId = '0') {
 
     try {
       const params = new URLSearchParams({
-        part: 'snippet,statistics',
+        part: 'snippet,statistics,contentDetails',
         chart: 'mostPopular',
         regionCode: regionCode,
         maxResults: '50',
@@ -40,14 +40,25 @@ export function useYouTubeApi(apiKey, regionCode = 'KR', categoryId = '0') {
       const data = await response.json();
 
       if (!response.ok) {
+        // 카테고리에 동영상이 없는 경우 (404 등) 빈 배열로 처리
+        if (response.status === 404 || data.error?.code === 404) {
+          setVideos([]);
+          return;
+        }
         const errorMessage = data.error?.message || '동영상을 불러오는데 실패했습니다.';
         throw new Error(errorMessage);
       }
 
       setVideos(data.items || []);
     } catch (err) {
-      setError(err.message);
-      setVideos([]);
+      // "videoChartNotFound" 등 카테고리 관련 에러는 빈 결과로 처리
+      if (err.message?.includes('videoChart') || err.message?.includes('video category')) {
+        setVideos([]);
+        setError(null);
+      } else {
+        setError(err.message);
+        setVideos([]);
+      }
     } finally {
       setLoading(false);
     }
