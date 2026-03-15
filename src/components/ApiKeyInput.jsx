@@ -29,20 +29,20 @@ export function ApiKeyInput({ apiKey, onApiKeyChange }) {
 
   if (!isEditing && apiKey) {
     return (
-      <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-2">
-        <span className="text-sm text-gray-600">API 키: </span>
-        <span className="text-sm font-mono text-gray-800">
+      <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2">
+        <span className="text-sm text-gray-600 dark:text-gray-400">API 키: </span>
+        <span className="text-sm font-mono text-gray-800 dark:text-gray-200">
           {apiKey.slice(0, 8)}...{apiKey.slice(-4)}
         </span>
         <button
           onClick={() => setIsEditing(true)}
-          className="ml-2 text-sm text-blue-600 hover:text-blue-800"
+          className="ml-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
         >
           수정
         </button>
         <button
           onClick={handleClear}
-          className="text-sm text-red-600 hover:text-red-800"
+          className="text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
         >
           삭제
         </button>
@@ -58,7 +58,7 @@ export function ApiKeyInput({ apiKey, onApiKeyChange }) {
         onChange={(e) => setInputValue(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder="YouTube API 키를 입력하세요"
-        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+        className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
       />
       <button
         onClick={handleSave}
@@ -73,7 +73,7 @@ export function ApiKeyInput({ apiKey, onApiKeyChange }) {
             setInputValue(apiKey);
             setIsEditing(false);
           }}
-          className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+          className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
           취소
         </button>

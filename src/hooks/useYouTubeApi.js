@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getCache, setCache, getCacheKey } from './useCache';
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3/videos';
 
@@ -12,15 +13,30 @@ export function useYouTubeApi(apiKey, regionCode = 'KR', categoryId = '0') {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fromCache, setFromCache] = useState(false);
 
-  const fetchVideos = useCallback(async () => {
+  const fetchVideos = useCallback(async (forceRefresh = false) => {
     if (!apiKey) {
       setVideos([]);
       return;
     }
 
+    const cacheKey = getCacheKey(regionCode, categoryId);
+
+    // 캐시 확인 (강제 새로고침이 아닌 경우)
+    if (!forceRefresh) {
+      const cached = getCache(cacheKey);
+      if (cached) {
+        setVideos(cached);
+        setFromCache(true);
+        setLoading(false);
+        return;
+      }
+    }
+
     setLoading(true);
     setError(null);
+    setFromCache(false);
 
     try {
       const params = new URLSearchParams({
@@ -49,7 +65,13 @@ export function useYouTubeApi(apiKey, regionCode = 'KR', categoryId = '0') {
         throw new Error(errorMessage);
       }
 
-      setVideos(data.items || []);
+      const items = data.items || [];
+      setVideos(items);
+
+      // 캐시 저장
+      if (items.length > 0) {
+        setCache(cacheKey, items);
+      }
     } catch (err) {
       // "videoChartNotFound" 등 카테고리 관련 에러는 빈 결과로 처리
       if (err.message?.includes('videoChart') || err.message?.includes('video category')) {
@@ -72,6 +94,8 @@ export function useYouTubeApi(apiKey, regionCode = 'KR', categoryId = '0') {
     videos,
     loading,
     error,
-    refetch: fetchVideos,
+    fromCache,
+    refetch: () => fetchVideos(false),
+    forceRefetch: () => fetchVideos(true),
   };
 }

@@ -10,7 +10,7 @@ export function CategoryFilter({ selectedCategory, onCategoryChange }) {
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             selectedCategory === category.id
               ? 'bg-red-600 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
           }`}
         >
           {category.name}
