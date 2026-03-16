@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { formatCount } from '../utils/formatViewCount';
 
-export function StatsDashboard({ videos, isOpen, onClose }) {
+export function StatsDashboard({ videos, isOpen, onClose, inline = false }) {
   const stats = useMemo(() => {
     if (!videos || videos.length === 0) {
       return null;
@@ -66,16 +66,66 @@ export function StatsDashboard({ videos, isOpen, onClose }) {
     };
   }, [videos]);
 
-  if (!isOpen) return null;
+  if (!inline && !isOpen) return null;
+
+  const content = stats ? (
+    <div className="space-y-6">
+      {/* 요약 통계 */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard label="총 동영상" value={stats.totalVideos} icon="📺" />
+        <StatCard label="총 조회수" value={formatCount(stats.totalViews)} icon="👁" />
+        <StatCard label="총 좋아요" value={formatCount(stats.totalLikes)} icon="👍" />
+        <StatCard label="HD 비율" value={`${stats.hdPercentage}%`} icon="🎬" />
+      </div>
+
+      {/* 평균 통계 */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">평균 통계</h3>
+        <div className="grid grid-cols-3 gap-4">
+          <StatCard label="평균 조회수" value={formatCount(stats.avgViews)} small />
+          <StatCard label="평균 좋아요" value={formatCount(stats.avgLikes)} small />
+          <StatCard label="평균 댓글" value={formatCount(stats.avgComments)} small />
+        </div>
+      </div>
+
+      {/* Top 동영상 */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Top 동영상</h3>
+        <div className="space-y-3">
+          {stats.topViewed && (
+            <TopVideoCard
+              label="최다 조회"
+              video={stats.topViewed}
+              statValue={formatCount(stats.topViewed.statistics?.viewCount)}
+              statLabel="조회수"
+            />
+          )}
+          {stats.topLiked && (
+            <TopVideoCard
+              label="최다 좋아요"
+              video={stats.topLiked}
+              statValue={formatCount(stats.topLiked.statistics?.likeCount)}
+              statLabel="좋아요"
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="py-12 text-center text-gray-500 dark:text-gray-400">
+      통계를 계산할 동영상이 없습니다.
+    </div>
+  );
+
+  if (inline) {
+    return <div className="max-w-2xl mx-auto">{content}</div>;
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-        {/* 헤더 */}
         <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            통계 대시보드
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">통계 대시보드</h2>
           <button
             onClick={onClose}
             className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -85,88 +135,7 @@ export function StatsDashboard({ videos, isOpen, onClose }) {
             </svg>
           </button>
         </div>
-
-        {/* 컨텐츠 */}
-        {stats ? (
-          <div className="p-4 space-y-6">
-            {/* 요약 통계 */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard
-                label="총 동영상"
-                value={stats.totalVideos}
-                icon="📺"
-              />
-              <StatCard
-                label="총 조회수"
-                value={formatCount(stats.totalViews)}
-                icon="👁"
-              />
-              <StatCard
-                label="총 좋아요"
-                value={formatCount(stats.totalLikes)}
-                icon="👍"
-              />
-              <StatCard
-                label="HD 비율"
-                value={`${stats.hdPercentage}%`}
-                icon="🎬"
-              />
-            </div>
-
-            {/* 평균 통계 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
-                평균 통계
-              </h3>
-              <div className="grid grid-cols-3 gap-4">
-                <StatCard
-                  label="평균 조회수"
-                  value={formatCount(stats.avgViews)}
-                  small
-                />
-                <StatCard
-                  label="평균 좋아요"
-                  value={formatCount(stats.avgLikes)}
-                  small
-                />
-                <StatCard
-                  label="평균 댓글"
-                  value={formatCount(stats.avgComments)}
-                  small
-                />
-              </div>
-            </div>
-
-            {/* Top 동영상 */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
-                Top 동영상
-              </h3>
-              <div className="space-y-3">
-                {stats.topViewed && (
-                  <TopVideoCard
-                    label="최다 조회"
-                    video={stats.topViewed}
-                    statValue={formatCount(stats.topViewed.statistics?.viewCount)}
-                    statLabel="조회수"
-                  />
-                )}
-                {stats.topLiked && (
-                  <TopVideoCard
-                    label="최다 좋아요"
-                    video={stats.topLiked}
-                    statValue={formatCount(stats.topLiked.statistics?.likeCount)}
-                    statLabel="좋아요"
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-            통계를 계산할 동영상이 없습니다.
-          </div>
-        )}
+        <div className="p-4">{content}</div>
       </div>
     </div>
   );
