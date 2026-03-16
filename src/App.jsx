@@ -5,6 +5,7 @@ import { CategoryFilter } from './components/CategoryFilter';
 import { SortSelector } from './components/SortSelector';
 import { VideoGrid } from './components/VideoGrid';
 import { StatsDashboard } from './components/StatsDashboard';
+import { ChannelAnalysis } from './components/ChannelAnalysis';
 import { useYouTubeApi } from './hooks/useYouTubeApi';
 import { useFavorites } from './hooks/useFavorites';
 import { useDarkMode } from './hooks/useDarkMode';
@@ -15,6 +16,7 @@ const TABS = [
   { id: 'trending', label: '급상승' },
   { id: 'favorites', label: '즐겨찾기' },
   { id: 'stats', label: '통계' },
+  { id: 'channel', label: '채널 분석' },
 ];
 
 function App() {
@@ -286,6 +288,11 @@ function App() {
         {/* 통계 탭 */}
         {activeTab === 'stats' && (
           <StatsDashboard videos={videos} inline />
+        )}
+
+        {/* 채널 분석 탭 */}
+        {activeTab === 'channel' && (
+          <ChannelAnalysis apiKey={apiKey} />
         )}
       </main>
 
