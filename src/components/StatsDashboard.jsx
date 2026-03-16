@@ -1,7 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { formatCount } from '../utils/formatViewCount';
+import { CATEGORIES } from '../utils/constants';
 
 export function StatsDashboard({ videos, isOpen, onClose, inline = false }) {
+  const [sortBy, setSortBy] = useState('avgViews');
+
   const stats = useMemo(() => {
     if (!videos || videos.length === 0) {
       return null;
@@ -44,12 +47,26 @@ export function StatsDashboard({ videos, isOpen, onClose, inline = false }) {
     ).length;
     const hdPercentage = Math.round((hdCount / videos.length) * 100);
 
-    // 카테고리별 분포 (상위 5개)
-    const categoryCount = {};
+    // 카테고리별 통계
+    const categoryMap = {};
     videos.forEach((v) => {
-      const cat = v.snippet?.categoryId || 'unknown';
-      categoryCount[cat] = (categoryCount[cat] || 0) + 1;
+      const id = v.snippet?.categoryId;
+      if (!id) return;
+      if (!categoryMap[id]) categoryMap[id] = { views: 0, likes: 0, comments: 0, count: 0 };
+      categoryMap[id].views    += parseInt(v.statistics?.viewCount || 0);
+      categoryMap[id].likes    += parseInt(v.statistics?.likeCount || 0);
+      categoryMap[id].comments += parseInt(v.statistics?.commentCount || 0);
+      categoryMap[id].count    += 1;
     });
+
+    const categoryStats = Object.entries(categoryMap).map(([id, d]) => ({
+      id,
+      name: CATEGORIES.find(c => c.id === id)?.name || `카테고리 ${id}`,
+      count: d.count,
+      avgViews:    Math.round(d.views    / d.count),
+      avgLikes:    Math.round(d.likes    / d.count),
+      avgComments: Math.round(d.comments / d.count),
+    }));
 
     return {
       totalVideos: videos.length,
@@ -63,6 +80,7 @@ export function StatsDashboard({ videos, isOpen, onClose, inline = false }) {
       topLiked,
       hdPercentage,
       hdCount,
+      categoryStats,
     };
   }, [videos]);
 
@@ -110,6 +128,15 @@ export function StatsDashboard({ videos, isOpen, onClose, inline = false }) {
           )}
         </div>
       </div>
+
+      {/* 카테고리별 비교 */}
+      {stats.categoryStats.length > 1 && (
+        <CategoryComparison
+          categoryStats={stats.categoryStats}
+          sortBy={sortBy}
+          onSortChange={setSortBy}
+        />
+      )}
     </div>
   ) : (
     <div className="py-12 text-center text-gray-500 dark:text-gray-400">
@@ -149,6 +176,61 @@ function StatCard({ label, value, icon, small }) {
         {value}
       </div>
       <div className="text-xs text-gray-500 dark:text-gray-400">{label}</div>
+    </div>
+  );
+}
+
+function CategoryComparison({ categoryStats, sortBy, onSortChange }) {
+  const sorted = [...categoryStats].sort((a, b) => b[sortBy] - a[sortBy]);
+  const maxValue = sorted[0]?.[sortBy] || 1;
+
+  const buttons = [
+    { key: 'avgViews', label: '평균 조회수' },
+    { key: 'avgLikes', label: '평균 좋아요' },
+    { key: 'count',    label: '영상 수' },
+  ];
+
+  return (
+    <div>
+      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">카테고리별 비교</h3>
+
+      {/* 정렬 버튼 */}
+      <div className="flex gap-2 mb-4">
+        {buttons.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => onSortChange(key)}
+            className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
+              sortBy === key
+                ? 'bg-red-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* 막대 바 목록 */}
+      <div className="space-y-3">
+        {sorted.map((cat) => (
+          <div key={cat.id} className="flex items-center gap-3">
+            <span className="text-xs text-gray-700 dark:text-gray-300 w-28 shrink-0 truncate">
+              {cat.name}
+              <span className="text-gray-400 dark:text-gray-500 ml-1">({cat.count})</span>
+            </span>
+            <div className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+              <div
+                className="bg-red-500 h-full rounded-full transition-all duration-500"
+                style={{ width: `${(cat[sortBy] / maxValue) * 100}%` }}
+              />
+            </div>
+            <span className="text-xs text-gray-600 dark:text-gray-400 w-20 text-right shrink-0">
+              {sortBy === 'count' ? cat[sortBy] : formatCount(cat[sortBy])}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
