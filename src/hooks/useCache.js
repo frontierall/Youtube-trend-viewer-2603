@@ -50,12 +50,21 @@ export function getCache(key) {
 
 /**
  * 캐시 키 생성
- * @param {string} regionCode - 국가 코드
- * @param {string} categoryId - 카테고리 ID
+ * @param {object} options
+ * @param {string} options.mode - 조회 모드
+ * @param {string} options.regionCode - 국가 코드
+ * @param {string} options.categoryId - 카테고리 ID
+ * @param {string} options.query - 검색어
  * @returns {string} 캐시 키
  */
-export function getCacheKey(regionCode, categoryId) {
-  return `videos_${regionCode}_${categoryId}`;
+export function getCacheKey({
+  mode = 'trending',
+  regionCode = 'KR',
+  categoryId = '0',
+  query = '',
+} = {}) {
+  const normalizedQuery = query.trim().toLowerCase();
+  return `videos_${mode}_${regionCode}_${categoryId}_${normalizedQuery}`;
 }
 
 /**

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { ApiKeyInput } from './components/ApiKeyInput';
 import { CountrySelector } from './components/CountrySelector';
 import { CategoryFilter } from './components/CategoryFilter';
+import { KeywordSearchBar } from './components/KeywordSearchBar';
 import { SortSelector } from './components/SortSelector';
 import { VideoGrid } from './components/VideoGrid';
 import { StatsDashboard } from './components/StatsDashboard';
@@ -32,6 +33,8 @@ function App() {
   const [selectedCountry, setSelectedCountry] = useState('KR');
   const [selectedCategory, setSelectedCategory] = useState('0');
   const [selectedSort, setSelectedSort] = useState('default');
+  const [trendingMode, setTrendingMode] = useState('trending');
+  const [keywordQuery, setKeywordQuery] = useState('');
 
   // 즐겨찾기 훅
   const { favorites, isFavorite, toggleFavorite } = useFavorites();
@@ -53,7 +56,9 @@ function App() {
   const { videos, loading, error, fromCache, forceRefetch } = useYouTubeApi(
     apiKey,
     selectedCountry,
-    selectedCategory
+    selectedCategory,
+    trendingMode,
+    keywordQuery
   );
 
   // 모든 채널 데이터 로드 여부 확인
@@ -78,6 +83,7 @@ function App() {
     if (!videos || videos.length === 0) return videos;
 
     const sorted = [...videos];
+    const isKeywordMode = trendingMode === 'keyword';
 
     switch (selectedSort) {
       case 'viewCount':
@@ -101,12 +107,27 @@ function App() {
           return bCount - aCount;
         });
       default:
+        if (isKeywordMode) {
+          return sorted.sort((a, b) =>
+            parseInt(b.statistics?.viewCount || 0) - parseInt(a.statistics?.viewCount || 0)
+          );
+        }
         return sorted; // 기본 순서 유지
     }
-  }, [videos, selectedSort, getChannelData]);
+  }, [videos, selectedSort, getChannelData, trendingMode]);
 
   // 현재 선택된 국가명 가져오기
   const currentCountryName = COUNTRIES.find(c => c.code === selectedCountry)?.name || selectedCountry;
+  const isKeywordMode = trendingMode === 'keyword';
+  const hasSearchQuery = keywordQuery.trim().length > 0;
+  const resultSummary = isKeywordMode
+    ? `"${keywordQuery}" 검색 결과`
+    : `${currentCountryName} 인기 동영상`;
+  const emptyMessage = isKeywordMode
+    ? hasSearchQuery
+      ? '검색어와 일치하는 동영상을 찾지 못했습니다. 다른 키워드나 카테고리를 시도해보세요.'
+      : '키워드를 입력하고 검색 버튼을 누르면 관련 인기 영상을 확인할 수 있습니다.'
+    : '선택한 조건에 맞는 인기 동영상이 없습니다.';
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
@@ -183,11 +204,48 @@ function App() {
         {/* API 키 입력 섹션 */}
         <section className="mb-6">
           <ApiKeyInput apiKey={apiKey} onApiKeyChange={setApiKey} />
+          <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-100">
+            기본 할당량 기준으로 YouTube Data API는 하루 10,000 units까지 사용할 수 있습니다.
+            인기 동영상 조회는 보통 1회당 1 unit, 구독자 보기는 채널당 1 unit, 키워드 검색은 검색 100 units와 상세 조회 1 unit 정도가 사용됩니다.
+          </div>
         </section>
 
         {/* 급상승 탭 */}
         {activeTab === 'trending' && (
           <>
+            <section className="mb-6 space-y-4">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setTrendingMode('trending')}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    trendingMode === 'trending'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  국가 급상승
+                </button>
+                <button
+                  onClick={() => setTrendingMode('keyword')}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    trendingMode === 'keyword'
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  키워드 검색
+                </button>
+              </div>
+
+              {isKeywordMode && (
+                <KeywordSearchBar
+                  initialValue={keywordQuery}
+                  onSearch={setKeywordQuery}
+                  disabled={!apiKey || loading}
+                />
+              )}
+            </section>
+
             {/* 카테고리 필터 */}
             <section className="mb-6">
               <CategoryFilter
@@ -201,7 +259,7 @@ function App() {
               <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="flex items-center gap-4">
                   <div className="text-gray-600 dark:text-gray-300">
-                    <span className="font-medium">{currentCountryName}</span> 인기 동영상
+                    <span className="font-medium">{resultSummary}</span>
                     <span className="font-medium ml-1">{sortedVideos.length}</span>개
                     {fromCache && (
                       <span className="ml-2 text-xs text-green-600 dark:text-green-400">(캐시)</span>
@@ -256,6 +314,8 @@ function App() {
               loading={loading}
               error={error}
               hasApiKey={!!apiKey}
+              emptyTitle={isKeywordMode ? '검색 결과가 없습니다' : '동영상이 없습니다'}
+              emptyMessage={emptyMessage}
               isFavorite={isFavorite}
               onToggleFavorite={toggleFavorite}
               loadChannelData={loadChannelData}

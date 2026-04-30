@@ -1,7 +1,19 @@
 import { VideoCard } from './VideoCard';
 import { SkeletonCard } from './SkeletonCard';
 
-export function VideoGrid({ videos, loading, error, hasApiKey, isFavorite, onToggleFavorite, loadChannelData, isChannelLoading, getChannelData }) {
+export function VideoGrid({
+  videos,
+  loading,
+  error,
+  hasApiKey,
+  isFavorite,
+  onToggleFavorite,
+  loadChannelData,
+  isChannelLoading,
+  getChannelData,
+  emptyTitle = '동영상이 없습니다',
+  emptyMessage = '선택한 조건에 맞는 인기 동영상이 없습니다.',
+}) {
   // API 키가 없을 때 안내 메시지
   if (!hasApiKey) {
     return (
@@ -42,8 +54,8 @@ export function VideoGrid({ videos, loading, error, hasApiKey, isFavorite, onTog
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <div className="text-gray-400 text-6xl mb-4">📺</div>
-        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">동영상이 없습니다</h3>
-        <p className="text-gray-600 dark:text-gray-400">선택한 조건에 맞는 인기 동영상이 없습니다.</p>
+        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">{emptyTitle}</h3>
+        <p className="text-gray-600 dark:text-gray-400">{emptyMessage}</p>
       </div>
     );
   }
